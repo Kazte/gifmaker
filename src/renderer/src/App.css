@@ -1,13 +1,16 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .app {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  height: 100vh;
 }
 
 .file-path {
@@ -39,6 +42,10 @@
   gap: 1rem;
 }
 
+header {
+  justify-self: flex-start;
+}
+
 main {
   flex: 1;
   display: flex;
@@ -46,4 +53,53 @@ main {
   align-items: center;
   justify-content: center;
   gap: 1rem;
+}
+
+.progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  position: relative;
+  text-align: center;
+  color: white;
+}
+
+.progress-bar>p {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #242424;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.progress-bar>progress {
+  height: 2rem;
+  width: 100%;
+  border-radius: 0;
+
+}
+
+.progress-bar>progress::-webkit-progress-value {
+  background-color: #3dff67;
+}
+
+/* Close button in the corner of the modal */
+.close-button {
+  background-color: #dd3838;
 }

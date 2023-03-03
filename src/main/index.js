@@ -85,7 +85,7 @@ ipcMain.on('show-error', (event, args) => {
 })
 
 ipcMain.handle('open-file-dialog', async () => {
-  const { filePaths, canceled } = await dialog.showOpenDialog({
+  const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, {
     title: 'Select video',
     properties: ['openFile'],
     filters: [
@@ -121,7 +121,8 @@ ipcMain.on('convert-video', async (event, args) => {
   ffmpeg.stderr.on('data', (data) => {
     const split = data.toString().split('frame=')
     const frame = parseInt(split[split.length - 1])
-    const progress = (frame / totalFrames) * 100
+    let progress = (frame / totalFrames) * 100
+    progress = Math.round(progress)
 
     event.reply('progress', {
       percent: progress,

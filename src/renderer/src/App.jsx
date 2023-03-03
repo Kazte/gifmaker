@@ -1,14 +1,13 @@
 import './App.css'
 const { send, invoke, on } = window.electron.ipcRenderer
 import { useState } from 'react'
-import { Dropzone } from './components'
-
+import { Dropzone, Modal } from './components'
 function App() {
   const [progress, setProgress] = useState(0)
   const [outputPath, setOutputPath] = useState('')
   const [filePath, setFilePath] = useState('')
   const [converting, setConverting] = useState(false)
-
+  const [showModal, setShowModal] = useState(false)
   const handleFilePathChanged = (filePath) => {
     setOutputPath('')
     setConverting(false)
@@ -59,6 +58,9 @@ function App() {
 
   const handleConvert = async () => {
     setConverting(true)
+    setShowModal(true)
+    setOutputPath('')
+    setProgress(0)
     const fileExtension = filePath.split('.').pop()
     const outputPath = filePath.replace(`.${fileExtension}`, '.gif')
 
@@ -69,7 +71,12 @@ function App() {
 
     on('progress', (event, progress) => {
       const { percent, done } = progress
-      setProgress(percent)
+
+      if (!isNaN(percent)) {
+        setProgress(percent)
+      } else {
+        setProgress(0)
+      }
 
       if (done) {
         setOutputPath(outputPath)
@@ -111,51 +118,38 @@ function App() {
         />
 
         <div className="buttons">
-          <button
-            className="convert-button"
-            onClick={() => {
-              send('open-modal')
-            }}
-          >
-            Open Modal
-          </button>
-
-          <button
-            className="convert-button"
-            onClick={handleConvert}
-            disabled={filePath === '' || converting}
-          >
+          <button className="convert-button" disabled={filePath === ''} onClick={handleConvert}>
             Convert
           </button>
 
           <button
             className="convert-button"
+            disabled={filePath === ''}
             onClick={() => {
               setFilePath('')
               setOutputPath('')
             }}
-            disabled={filePath === '' || converting}
           >
             Clear
           </button>
         </div>
+      </main>
 
-        {converting && (
+      {showModal && (
+        <Modal isOpened={showModal}>
           <div className="progress">
-            <progress value={progress} max="100">
-              0%
-            </progress>
+            <h2>{converting ? 'Converting...' : 'Done!'}</h2>
+            <div className="progress-bar">
+              <progress value={progress} max="100"></progress>
+              <p>{progress}%</p>
+            </div>
           </div>
-        )}
 
-        {outputPath !== '' && (
           <div className="output">
-            <p>Output:</p>
-            <p>{outputPath}</p>
-
             <div className="output-buttons">
               <button
                 className="open-button"
+                disabled={outputPath === ''}
                 onClick={() => {
                   openPath(outputPath)
                 }}
@@ -165,16 +159,27 @@ function App() {
 
               <button
                 className="open-button"
+                disabled={outputPath === ''}
                 onClick={() => {
                   openFolder(outputPath)
                 }}
               >
                 Show in folder
               </button>
+
+              <button
+                className="close-button"
+                disabled={outputPath === ''}
+                onClick={() => {
+                  setShowModal(false)
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
-        )}
-      </main>
+        </Modal>
+      )}
     </div>
   )
 }
