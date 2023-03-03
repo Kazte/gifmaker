@@ -44,4 +44,6 @@ publish:
   owner: Kazte
   releaseType: release
   publishAutoUpdate: true
+  host: github.com
+  token: ${GH_TOKEN}
 
