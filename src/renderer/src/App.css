@@ -1,0 +1,49 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-path {
+  margin: 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.output {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.output>* {
+  margin: 1rem;
+}
+
+.output-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}

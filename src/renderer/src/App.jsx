@@ -1,0 +1,182 @@
+import './App.css'
+const { send, invoke, on } = window.electron.ipcRenderer
+import { useState } from 'react'
+import { Dropzone } from './components'
+
+function App() {
+  const [progress, setProgress] = useState(0)
+  const [outputPath, setOutputPath] = useState('')
+  const [filePath, setFilePath] = useState('')
+  const [converting, setConverting] = useState(false)
+
+  const handleFilePathChanged = (filePath) => {
+    setOutputPath('')
+    setConverting(false)
+    setProgress(0)
+    setFilePath(filePath)
+  }
+
+  const dropHandler = (ev) => {
+    ev.preventDefault()
+
+    if (ev.dataTransfer.items) {
+      if (ev.dataTransfer.items.length > 1) {
+        send('show-error', {
+          title: 'File length error',
+          message: 'Please select only one file.'
+        })
+        return
+      }
+
+      // check if file is video
+      if (ev.dataTransfer.items[0].kind === 'file') {
+        const file = ev.dataTransfer.items[0].getAsFile()
+        const fileExtension = file.name.split('.').pop()
+
+        if (['mp4', 'mkv', 'avi', 'mov', 'wmv'].includes(fileExtension)) {
+          setFilePath(file.path)
+          handleFilePathChanged(file.path)
+        } else {
+          send('show-error', {
+            title: 'File type error',
+            message: 'Please select a video file.'
+          })
+        }
+      }
+    }
+  }
+
+  const clickHandler = async () => {
+    invoke('open-file-dialog').then((res) => {
+      if (res) {
+        if (res.canceled) {
+          return
+        }
+        handleFilePathChanged(res.filePaths[0])
+      }
+    })
+  }
+
+  const handleConvert = async () => {
+    setConverting(true)
+    const fileExtension = filePath.split('.').pop()
+    const outputPath = filePath.replace(`.${fileExtension}`, '.gif')
+
+    await send('convert-video', {
+      inputPath: filePath,
+      outputPath
+    })
+
+    on('progress', (event, progress) => {
+      const { percent, done } = progress
+      setProgress(percent)
+
+      if (done) {
+        setOutputPath(outputPath)
+        setConverting(false)
+      }
+    })
+  }
+
+  const openPath = (path) => {
+    send('open-path', path)
+  }
+
+  const openFolder = (path) => {
+    send('open-folder', path)
+  }
+
+  // const handleClick = async () => {
+  //   if (window) {
+  //     const res = await send('show-error', {
+  //       title: 'Error',
+  //       message: 'Please select only one file.'
+  //     })
+  //     console.log(res)
+  //   }
+  // }
+
+  return (
+    <div className="app">
+      <header>
+        <h1>Gifmaker</h1>
+      </header>
+
+      <main>
+        <Dropzone
+          handleFilePathChanged={handleFilePathChanged}
+          onDropHandler={dropHandler}
+          onClickHandler={clickHandler}
+          filePath={filePath}
+        />
+
+        <div className="buttons">
+          <button
+            className="convert-button"
+            onClick={() => {
+              send('open-modal')
+            }}
+          >
+            Open Modal
+          </button>
+
+          <button
+            className="convert-button"
+            onClick={handleConvert}
+            disabled={filePath === '' || converting}
+          >
+            Convert
+          </button>
+
+          <button
+            className="convert-button"
+            onClick={() => {
+              setFilePath('')
+              setOutputPath('')
+            }}
+            disabled={filePath === '' || converting}
+          >
+            Clear
+          </button>
+        </div>
+
+        {converting && (
+          <div className="progress">
+            <progress value={progress} max="100">
+              0%
+            </progress>
+          </div>
+        )}
+
+        {outputPath !== '' && (
+          <div className="output">
+            <p>Output:</p>
+            <p>{outputPath}</p>
+
+            <div className="output-buttons">
+              <button
+                className="open-button"
+                onClick={() => {
+                  openPath(outputPath)
+                }}
+              >
+                Open
+              </button>
+
+              <button
+                className="open-button"
+                onClick={() => {
+                  openFolder(outputPath)
+                }}
+              >
+                Show in folder
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
+export default App
