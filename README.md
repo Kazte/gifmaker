@@ -1,34 +1,26 @@
-# gifmaker
+<div align='center'>
+  <img src='resources/icon.png' width='175' alt='GifMaker logo'>
+</div>
 
-An Electron application with React
+# GifMaker
 
-## Recommended IDE Setup
+GUI Tool to make GIF from Videos.
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+## Installing
 
-## Project Setup
+- Install [ffmpeg](https://www.ffmpeg.org/download.html).
+- Add folder "__bin__" from ffmpeg to enviroment variables.
+- Run App.
 
-### Install
+## Documentation
 
-```bash
-$ npm install
-```
 
-### Development
+Drag and drop or click to upload a video.
+Then click convert to start.
 
-```bash
-$ npm run dev
-```
+### Keyboard shortcuts
+- <kbd>⌘</kbd>/<kbd>CTRL</kbd>+<kbd>o</kbd> Open File
+- <kbd>⌘</kbd>/<kbd>CTRL</kbd>+<kbd>c</kbd> Start convertion
 
-### Build
-
-```bash
-# For windows
-$ npm run build:win
-
-# For macOS
-$ npm run build:mac
-
-# For Linux
-$ npm run build:linux
-```
+## Development
+- SOON
