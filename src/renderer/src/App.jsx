@@ -2,6 +2,9 @@ import './App.css'
 const { send, invoke, on } = window.electron.ipcRenderer
 import { useState } from 'react'
 import { Dropzone, Modal } from './components'
+
+// import logo from './assets/logo.png'
+
 function App() {
   const [progress, setProgress] = useState(0)
   const [outputPath, setOutputPath] = useState('')
@@ -106,6 +109,8 @@ function App() {
   return (
     <div className="app">
       <header>
+        {/* image with png in asset folder */}
+        <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" />
         <h1>Gifmaker</h1>
       </header>
 

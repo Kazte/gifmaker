@@ -14,7 +14,7 @@ export const Dropzone = ({ filePath, onClickHandler, onDropHandler }) => {
   return (
     <div
       id="drop_zone"
-      className={className + ' border'}
+      className={className + ' border' + ' drop-zone'}
       onDrop={onDropHandler}
       onDragOver={dragOverHandler}
       onMouseEnter={() => {

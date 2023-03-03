@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: Gif Maker
+appId: com.kazte.gifmaker
+productName: GifMaker
 directories:
   buildResources: build
 files:
@@ -11,7 +11,9 @@ asarUnpack:
   - resources/*
 afterSign: build/notarize.js
 win:
-  executableName: Gif Maker
+  executableName: GifMaker
+  publish:
+    - github
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -38,4 +40,8 @@ appImage:
 npmRebuild: false
 publish:
   provider: github
-  url: https://github.com/Kazte/gifmaker
+  repo: https://github.com/Kazte/gifmaker
+  owner: Kazte
+  releaseType: release
+  publishAutoUpdate: true
+

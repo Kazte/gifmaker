@@ -4,6 +4,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
 
+import { autoUpdater } from 'electron-updater'
+
 let mainWindow = null
 
 function createWindow() {
@@ -38,6 +40,7 @@ function createWindow() {
     mainWindow.webContents.openDevTools()
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    autoUpdater.checkForUpdates()
   }
 }
 
@@ -73,6 +76,20 @@ app.on('window-all-closed', () => {
   }
 })
 
+autoUpdater.on('update-available', (event, releaseNotes, releaseName) => {
+  const dialogOpts = {
+    type: 'info',
+    buttons: ['Update', 'Cancel'],
+    title: 'Application Update',
+    message: process.platform === 'win32' ? releaseNotes : releaseName,
+    detail: 'A new version has been found. Downloading now...'
+  }
+
+  dialog.showMessageBox(dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) autoUpdater.quitAndInstall()
+  })
+})
+
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 ipcMain.on('show-error', (event, args) => {
@@ -91,7 +108,7 @@ ipcMain.handle('open-file-dialog', async () => {
     filters: [
       {
         name: 'Video',
-        extensions: ['mp4', 'mkv', 'avi', 'mov', 'wmv']
+        extensions: ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm']
       }
     ]
   })
@@ -110,18 +127,31 @@ ipcMain.on('open-folder', (event, args) => {
 
 ipcMain.on('convert-video', async (event, args) => {
   const { inputPath, outputPath } = args
-  const totalFrames = await getTotalFrames(inputPath)
+  const { totalFrames, fps } = await getTotalFrames(inputPath)
 
-  const ffmpeg = spawn('ffmpeg', ['-y', '-i', inputPath, outputPath])
+  const fixedTotalFrame = (12 * totalFrames) / fps
 
-  ffmpeg.stdout.on('data', (data) => {
-    console.log('stdout', data.toString())
-  })
+  console.log(totalFrames)
+
+  const ffmpeg = spawn('ffmpeg', [
+    '-i',
+    inputPath,
+    '-filter_complex',
+    '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
+    // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
+    outputPath,
+    '-y'
+  ])
+
+  // ffmpeg.stdout.on('data', (data) => {
+  //   // console.log('stdout', data.toString())
+  // })
 
   ffmpeg.stderr.on('data', (data) => {
+    // console.log('stderr', data.toString())
     const split = data.toString().split('frame=')
     const frame = parseInt(split[split.length - 1])
-    let progress = (frame / totalFrames) * 100
+    let progress = (frame / fixedTotalFrame) * 100
     progress = Math.round(progress)
 
     event.reply('progress', {
@@ -141,6 +171,26 @@ ipcMain.on('convert-video', async (event, args) => {
 
 const getTotalFrames = (inputPath) => {
   return new Promise((resolve) => {
+    let fps
+
+    const ffprobeFps = spawn('ffprobe', [
+      '-v',
+      'error',
+      '-select_streams',
+      'v',
+      '-of',
+      'default=noprint_wrappers=1:nokey=1',
+      '-show_entries',
+      'stream=r_frame_rate',
+      inputPath
+    ])
+
+    ffprobeFps.stdout.on('data', (data) => {
+      console.log(data.toString())
+      const split = data.toString().split('/')
+      fps = parseInt(split[0]) / parseInt(split[1])
+    })
+
     const ffprobe = spawn('ffprobe', [
       '-v',
       'error',
@@ -157,9 +207,10 @@ const getTotalFrames = (inputPath) => {
     let totalFrames = 0
 
     ffprobe.stdout.on('data', (data) => {
+      console.log(data.toString())
       const split = data.toString().split('stream,')[1]
       totalFrames = parseInt(split)
-      resolve(totalFrames)
+      resolve({ totalFrames, fps })
     })
 
     // ffprobe.stderr.on('data', (data) => {})

@@ -28,3 +28,7 @@
 .dragover {
   background-color: rgb(29, 29, 29);
 }
+
+.drop-zone {
+  padding: 15px;
+}

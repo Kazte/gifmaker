@@ -44,6 +44,15 @@
 
 header {
   justify-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+header>img {
+  width: 150px;
+  height: 150px;
 }
 
 main {
