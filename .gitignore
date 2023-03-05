@@ -5,3 +5,4 @@ out
 build
 .vscode
 .env
+electron-builder.env

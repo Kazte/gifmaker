@@ -12,6 +12,7 @@ asarUnpack:
 afterSign: build/notarize.js
 win:
   executableName: GifMaker
+  icon: buildResources/icon.png
   publish:
     - github
 nsis:
@@ -45,5 +46,5 @@ publish:
   releaseType: release
   publishAutoUpdate: true
   host: github.com
-  token: ${GH_TOKEN}
+  token: ${env.GH_TOKEN}
 
