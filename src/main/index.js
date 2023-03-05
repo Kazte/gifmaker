@@ -19,7 +19,8 @@ function createWindow() {
     icon: icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: false
     },
     resizable: false
   })
@@ -101,7 +102,7 @@ ipcMain.on('show-error', (event, args) => {
   })
 })
 
-ipcMain.handle('open-file-dialog', async () => {
+ipcMain.on('open-file-dialog', async (event) => {
   const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, {
     title: 'Select video',
     properties: ['openFile'],
@@ -113,7 +114,9 @@ ipcMain.handle('open-file-dialog', async () => {
     ]
   })
 
-  return { filePaths, canceled }
+  const filePath = filePaths[0] === undefined ? '' : filePaths[0]
+  console.log(filePath)
+  event.reply('file-path-change', { filePath, canceled })
 })
 
 ipcMain.on('open-path', (event, args) => {
@@ -125,6 +128,13 @@ ipcMain.on('open-folder', (event, args) => {
   shell.showItemInFolder(args)
 })
 
+let ffmpeg
+
+ipcMain.on('cancel-convert', () => {
+  ffmpeg.kill()
+  console.log('killed')
+})
+
 ipcMain.on('convert-video', async (event, args) => {
   const { inputPath, outputPath } = args
   const { totalFrames, fps } = await getTotalFrames(inputPath)
@@ -133,7 +143,7 @@ ipcMain.on('convert-video', async (event, args) => {
 
   console.log(totalFrames)
 
-  const ffmpeg = spawn('ffmpeg', [
+  ffmpeg = spawn('ffmpeg', [
     '-i',
     inputPath,
     '-filter_complex',

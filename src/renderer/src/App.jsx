@@ -1,7 +1,10 @@
 import './App.css'
-const { send, invoke, on } = window.electron.ipcRenderer
-import { useState } from 'react'
-import { Dropzone, Modal } from './components'
+const { send, invoke, on, removeAllListeners } = window.electron.ipcRenderer
+import { useEffect, useState } from 'react'
+import { Dropzone, Modal, VideoPreview } from './components'
+import { useDispatch } from 'react-redux'
+import { pause } from './features/player/playerSlice'
+import keyboardjs from 'keyboardjs'
 
 // import logo from './assets/logo.png'
 
@@ -11,12 +14,38 @@ function App() {
   const [filePath, setFilePath] = useState('')
   const [converting, setConverting] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const handleFilePathChanged = (filePath) => {
+
+  const handleFilePathChanged = (_filePath) => {
     setOutputPath('')
     setConverting(false)
     setProgress(0)
-    setFilePath(filePath)
+    setFilePath(_filePath)
   }
+
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    keyboardjs.bind('mod + o', () => {
+      clickHandler()
+    })
+
+    keyboardjs.bind('mod + c', () => {
+      handleConvert()
+    })
+
+    on('file-path-change', (event, args) => {
+      if (!args.canceled) {
+        handleFilePathChanged(args.filePath)
+      }
+    })
+
+    return () => {
+      keyboardjs.unbind('mod + o')
+      keyboardjs.unbind('mod + c')
+
+      removeAllListeners('file-path-change')
+    }
+  }, [])
 
   const dropHandler = (ev) => {
     ev.preventDefault()
@@ -36,7 +65,6 @@ function App() {
         const fileExtension = file.name.split('.').pop()
 
         if (['mp4', 'mkv', 'avi', 'mov', 'wmv'].includes(fileExtension)) {
-          setFilePath(file.path)
           handleFilePathChanged(file.path)
         } else {
           send('show-error', {
@@ -49,14 +77,7 @@ function App() {
   }
 
   const clickHandler = async () => {
-    invoke('open-file-dialog').then((res) => {
-      if (res) {
-        if (res.canceled) {
-          return
-        }
-        handleFilePathChanged(res.filePaths[0])
-      }
-    })
+    send('open-file-dialog')
   }
 
   const handleConvert = async () => {
@@ -64,6 +85,9 @@ function App() {
     setShowModal(true)
     setOutputPath('')
     setProgress(0)
+
+    dispatch(pause())
+
     const fileExtension = filePath.split('.').pop()
     const outputPath = filePath.replace(`.${fileExtension}`, '.gif')
 
@@ -88,6 +112,18 @@ function App() {
     })
   }
 
+  const handleCancel = () => {
+    setOutputPath('')
+    setProgress(0)
+    setConverting(false)
+
+    send('cancel-convert')
+  }
+
+  const handleClear = () => {
+    handleFilePathChanged('')
+  }
+
   const openPath = (path) => {
     send('open-path', path)
   }
@@ -96,45 +132,41 @@ function App() {
     send('open-folder', path)
   }
 
-  // const handleClick = async () => {
-  //   if (window) {
-  //     const res = await send('show-error', {
-  //       title: 'Error',
-  //       message: 'Please select only one file.'
-  //     })
-  //     console.log(res)
-  //   }
-  // }
+  const getFileName = (path) => {
+    const fileName = path.split('\\').pop()
+    return fileName
+  }
 
   return (
     <div className="app">
-      <header>
-        {/* image with png in asset folder */}
-        <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" />
-        <h1>Gifmaker</h1>
-      </header>
+      {!filePath ? (
+        <header>
+          <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" />
+          <h1>Gifmaker</h1>
+        </header>
+      ) : null}
 
       <main>
-        <Dropzone
-          handleFilePathChanged={handleFilePathChanged}
-          onDropHandler={dropHandler}
-          onClickHandler={clickHandler}
-          filePath={filePath}
-        />
+        <p>{getFileName(filePath)}</p>
+        {filePath ? (
+          <div className="video-preview-container">
+            <VideoPreview path={filePath} />
+          </div>
+        ) : (
+          <Dropzone
+            handleFilePathChanged={handleFilePathChanged}
+            onDropHandler={dropHandler}
+            onClickHandler={clickHandler}
+            filePath={filePath}
+          />
+        )}
 
         <div className="buttons">
           <button className="convert-button" disabled={filePath === ''} onClick={handleConvert}>
             Convert
           </button>
 
-          <button
-            className="convert-button"
-            disabled={filePath === ''}
-            onClick={() => {
-              setFilePath('')
-              setOutputPath('')
-            }}
-          >
+          <button className="convert-button" disabled={filePath === ''} onClick={handleClear}>
             Clear
           </button>
         </div>
@@ -173,8 +205,18 @@ function App() {
               </button>
 
               <button
+                className="open-button"
+                disabled={!converting}
+                onClick={() => {
+                  handleCancel()
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
                 className="close-button"
-                disabled={outputPath === ''}
+                disabled={converting}
                 onClick={() => {
                   setShowModal(false)
                 }}

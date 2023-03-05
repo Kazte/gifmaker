@@ -39,6 +39,7 @@
 
 .buttons {
   display: flex;
+  margin: 0 auto;
   gap: 1rem;
 }
 
@@ -111,4 +112,9 @@ main {
 /* Close button in the corner of the modal */
 .close-button {
   background-color: #dd3838;
+}
+
+.video-preview-container {
+  display: flex;
+  flex-direction: column;
 }
