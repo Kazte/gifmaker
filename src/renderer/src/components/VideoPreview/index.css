@@ -1,23 +1,14 @@
 .video-preview {
-  width: 75%;
-  min-width: 80vw;
-  margin: 0 auto;
+  width: 95vw;
 }
 
 .video-preview video {
   object-fit: contain;
-  width: 100%;
+  width: 80%;
 
   height: 100%;
   aspect-ratio: 16/9;
   margin: auto;
-}
-
-.video-preview__time {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #fff;
-  margin: 8px
 }
 
 .controls-wrapper {
@@ -25,4 +16,31 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
+}
+
+.timeline {
+  width: 100%;
+  position: relative;
+  background-color: #444;
+}
+
+.video-preview__time {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  padding: .5em;
+  pointer-events: none;
+
+  user-select: none;
+}
+
+.current-time {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  width: 5px;
+  background-color: red;
+  z-index: 2;
+  pointer-events: none;
+
+  user-select: none;
 }

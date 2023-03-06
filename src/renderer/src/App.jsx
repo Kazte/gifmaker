@@ -1,12 +1,11 @@
 import './App.css'
-const { send, invoke, on, removeAllListeners } = window.electron.ipcRenderer
+const { send, on, removeAllListeners } = window.electron.ipcRenderer
 import { useEffect, useState } from 'react'
 import { Dropzone, Modal, VideoPreview } from './components'
 import { useDispatch } from 'react-redux'
 import { pause } from './features/player/playerSlice'
 import keyboardjs from 'keyboardjs'
-
-// import logo from './assets/logo.png'
+import { ffmpegConvertToGif, ffmpegEvents } from './ffmpeg'
 
 function App() {
   const [progress, setProgress] = useState(0)
@@ -39,9 +38,34 @@ function App() {
       }
     })
 
+    ffmpegEvents.on('conversion', (data) => {
+      const { percent, done, error, errorMessage } = data
+
+      if (error) {
+        send('show-error', {
+          title: 'Conversion error',
+          message: errorMessage
+        })
+
+        setConverting(false)
+        setProgress(0)
+        return
+      }
+
+      if (done) {
+        setOutputPath(data.outputPath)
+        setConverting(false)
+        return
+      }
+
+      setProgress(percent)
+    })
+
     return () => {
       keyboardjs.unbind('mod + o')
       keyboardjs.unbind('mod + c')
+
+      ffmpegEvents.removeAllListeners('conversion')
 
       removeAllListeners('file-path-change')
     }
@@ -91,25 +115,7 @@ function App() {
     const fileExtension = filePath.split('.').pop()
     const outputPath = filePath.replace(`.${fileExtension}`, '.gif')
 
-    await send('convert-video', {
-      inputPath: filePath,
-      outputPath
-    })
-
-    on('progress', (event, progress) => {
-      const { percent, done } = progress
-
-      if (!isNaN(percent)) {
-        setProgress(percent)
-      } else {
-        setProgress(0)
-      }
-
-      if (done) {
-        setOutputPath(outputPath)
-        setConverting(false)
-      }
-    })
+    await ffmpegConvertToGif({ inputPath: filePath, outputPath, fpsSample: 10 })
   }
 
   const handleCancel = () => {
@@ -142,7 +148,7 @@ function App() {
       {!filePath ? (
         <header>
           <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" />
-          <h1>Gifmaker</h1>
+          <h1>GifMaker</h1>
         </header>
       ) : null}
 

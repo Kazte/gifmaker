@@ -1,5 +1,5 @@
 import './index.css'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { play, pause, setCurrentTime, setDuration } from '../../features/player/playerSlice'
 import { formatDuration } from '../../utils/format'
@@ -8,6 +8,9 @@ export const VideoPreview = ({ path }) => {
   const { playing, duration, currentTime } = useSelector((state) => state.player)
   const dispatch = useDispatch()
   const videoRef = useRef()
+
+  const [delta, setDelta] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
 
   const getVideo = () => videoRef.current
 
@@ -29,6 +32,39 @@ export const VideoPreview = ({ path }) => {
     dispatch(setCurrentTime(e.target.currentTime))
   }
 
+  const handleTimelineClick = (e) => {
+    const { left, width } = e.target.getBoundingClientRect()
+    const { duration } = getVideo()
+    const clickPosition = e.clientX - left
+    const clickPositionInPercent = clickPosition / width
+    const newCurrentTime = clickPositionInPercent * duration
+
+    getVideo().currentTime = newCurrentTime
+    dispatch(setCurrentTime(newCurrentTime))
+  }
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true)
+    setDelta(e.clientX - e.target.offsetLeft)
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      const { left, width } = e.target.getBoundingClientRect()
+      const { duration } = getVideo()
+      const clickPosition = e.clientX - left
+      const clickPositionInPercent = clickPosition / width
+      const newCurrentTime = clickPositionInPercent * duration
+
+      getVideo().currentTime = newCurrentTime
+      dispatch(setCurrentTime(newCurrentTime))
+    }
+  }
+
   return (
     <>
       <div className="video-preview">
@@ -44,9 +80,22 @@ export const VideoPreview = ({ path }) => {
         </video>
       </div>
 
-      <p className="video-preview__time">{`${formatDuration(currentTime)} : ${formatDuration(
-        duration
-      )}`}</p>
+      <div
+        id="timeline"
+        className="timeline"
+        onClick={handleTimelineClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseUp}
+      >
+        <p className="video-preview__time">{`${formatDuration(currentTime)}`}</p>
+        <div
+          className="current-time"
+          style={{ left: `${(currentTime / duration) * 100}%` }}
+          draggable="true"
+        />
+      </div>
 
       <div className="controls-wrapper">
         <button

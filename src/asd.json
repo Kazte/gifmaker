@@ -1,0 +1,19 @@
+{
+  "format": {
+    "filename": "C:\\Users\\Kazte\\Desktop\\VID-20210129-WA0007.mp4",
+    "nb_streams": 2,
+    "nb_programs": 0,
+    "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+    "format_long_name": "QuickTime / MOV",
+    "start_time": "0.000000",
+    "duration": "44.953832",
+    "size": "7708731",
+    "bit_rate": "1371848",
+    "probe_score": 100,
+    "tags": {
+      "major_brand": "mp42",
+      "minor_version": "0",
+      "compatible_brands": "mp42isom"
+    }
+  }
+}

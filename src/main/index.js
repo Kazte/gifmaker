@@ -2,10 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { spawn } from 'child_process'
 
 import { autoUpdater } from 'electron-updater'
-
 let mainWindow = null
 
 function createWindow() {
@@ -20,7 +18,9 @@ function createWindow() {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
-      webSecurity: false
+      webSecurity: false,
+      nodeIntegration: true,
+      contextIsolation: false
     },
     resizable: false
   })
@@ -128,106 +128,120 @@ ipcMain.on('open-folder', (event, args) => {
   shell.showItemInFolder(args)
 })
 
-let ffmpeg
+let ffmpegCmd
 
 ipcMain.on('cancel-convert', () => {
-  ffmpeg.kill()
+  ffmpegCmd.canceled()
   console.log('killed')
 })
 
-ipcMain.on('convert-video', async (event, args) => {
-  const { inputPath, outputPath } = args
-  const { totalFrames, fps } = await getTotalFrames(inputPath)
+// ipcMain.on('convert-video', async (event, args) => {
+//   const { inputPath, outputPath } = args
+//   // const { totalFrames, fps } = await getTotalFrames(inputPath)
 
-  const fixedTotalFrame = (12 * totalFrames) / fps
+//   // const fixedTotalFrame = (12 * totalFrames) / fps
 
-  console.log(totalFrames)
+//   try {
+//     ffmpegCmd = await execa('ffmpeg', [
+//       '-i',
+//       inputPath,
+//       '-filter_complex',
+//       '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
+//       // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
+//       outputPath,
+//       '-y'
+//     ]).stderr.pipe(process.stdout)
+//   } catch (e) {
+//     console.log(e)
+//   }
 
-  ffmpeg = spawn('ffmpeg', [
-    '-i',
-    inputPath,
-    '-filter_complex',
-    '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
-    // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
-    outputPath,
-    '-y'
-  ])
+//   // console.log(stdout)
 
-  // ffmpeg.stdout.on('data', (data) => {
-  //   // console.log('stdout', data.toString())
-  // })
+//   // ffmpeg = spawn('ffmpeg', [
+//   //   '-i',
+//   //   inputPath,
+//   //   '-filter_complex',
+//   //   '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
+//   //   // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
+//   //   outputPath,
+//   //   '-y'
+//   // ])
 
-  ffmpeg.stderr.on('data', (data) => {
-    // console.log('stderr', data.toString())
-    const split = data.toString().split('frame=')
-    const frame = parseInt(split[split.length - 1])
-    let progress = (frame / fixedTotalFrame) * 100
-    progress = Math.round(progress)
+//   // // ffmpeg.stdout.on('data', (data) => {
+//   // //   // console.log('stdout', data.toString())
+//   // // })
 
-    event.reply('progress', {
-      percent: progress,
-      done: false
-    })
-  })
+//   // ffmpeg.stderr.on('data', (data) => {
+//   //   // console.log('stderr', data.toString())
+//   //   const split = data.toString().split('frame=')
+//   //   const frame = parseInt(split[split.length - 1])
+//   //   let progress = (frame / fixedTotalFrame) * 100
+//   //   progress = Math.round(progress)
 
-  ffmpeg.on('close', (code) => {
-    console.log(`done with code ${code}`)
-    event.reply('progress', {
-      percent: 100,
-      done: true
-    })
-  })
-})
+//   //   event.reply('progress', {
+//   //     percent: progress,
+//   //     done: false
+//   //   })
+//   // })
 
-const getTotalFrames = (inputPath) => {
-  return new Promise((resolve) => {
-    let fps
+//   // ffmpeg.on('close', (code) => {
+//   //   console.log(`done with code ${code}`)
+//   //   event.reply('progress', {
+//   //     percent: 100,
+//   //     done: true
+//   //   })
+//   // })
+// })
 
-    const ffprobeFps = spawn('ffprobe', [
-      '-v',
-      'error',
-      '-select_streams',
-      'v',
-      '-of',
-      'default=noprint_wrappers=1:nokey=1',
-      '-show_entries',
-      'stream=r_frame_rate',
-      inputPath
-    ])
+// const getTotalFrames = (inputPath) => {
+//   return new Promise((resolve) => {
+//     let fps
 
-    ffprobeFps.stdout.on('data', (data) => {
-      console.log(data.toString())
-      const split = data.toString().split('/')
-      fps = parseInt(split[0]) / parseInt(split[1])
-    })
+//     const ffprobeFps = spawn('ffprobe', [
+//       '-v',
+//       'error',
+//       '-select_streams',
+//       'v',
+//       '-of',
+//       'default=noprint_wrappers=1:nokey=1',
+//       '-show_entries',
+//       'stream=r_frame_rate',
+//       inputPath
+//     ])
 
-    const ffprobe = spawn('ffprobe', [
-      '-v',
-      'error',
-      '-select_streams',
-      'v:0',
-      '-count_frames',
-      '-show_entries',
-      'stream=nb_read_frames',
-      '-print_format',
-      'csv',
-      inputPath
-    ])
+//     ffprobeFps.stdout.on('data', (data) => {
+//       console.log(data.toString())
+//       const split = data.toString().split('/')
+//       fps = parseInt(split[0]) / parseInt(split[1])
+//     })
 
-    let totalFrames = 0
+//     const ffprobe = spawn('ffprobe', [
+//       '-v',
+//       'error',
+//       '-select_streams',
+//       'v:0',
+//       '-count_frames',
+//       '-show_entries',
+//       'stream=nb_read_frames',
+//       '-print_format',
+//       'csv',
+//       inputPath
+//     ])
 
-    ffprobe.stdout.on('data', (data) => {
-      console.log(data.toString())
-      const split = data.toString().split('stream,')[1]
-      totalFrames = parseInt(split)
-      resolve({ totalFrames, fps })
-    })
+//     let totalFrames = 0
 
-    // ffprobe.stderr.on('data', (data) => {})
+//     ffprobe.stdout.on('data', (data) => {
+//       console.log(data.toString())
+//       const split = data.toString().split('stream,')[1]
+//       totalFrames = parseInt(split)
+//       resolve({ totalFrames, fps })
+//     })
 
-    // ffprobe.on('close', (code) => {})
-  })
-}
+//     // ffprobe.stderr.on('data', (data) => {})
+
+//     // ffprobe.on('close', (code) => {})
+//   })
+// }
 
 // create modal window
 ipcMain.on('open-modal', (event, args) => {
