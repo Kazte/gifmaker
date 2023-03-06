@@ -5,6 +5,7 @@ import { Dropzone, Modal, VideoPreview } from './components'
 import { useDispatch } from 'react-redux'
 import { pause } from './features/player/playerSlice'
 import keyboardjs from 'keyboardjs'
+import getVideoInfo from './ffmpeg'
 
 // import logo from './assets/logo.png'
 
@@ -46,6 +47,12 @@ function App() {
       removeAllListeners('file-path-change')
     }
   }, [])
+
+  useEffect(() => {
+    if (filePath) {
+      getVideoInfo(filePath)
+    }
+  }, [filePath])
 
   const dropHandler = (ev) => {
     ev.preventDefault()
@@ -142,7 +149,7 @@ function App() {
       {!filePath ? (
         <header>
           <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" />
-          <h1>Gifmaker</h1>
+          <h1>GifMaker</h1>
         </header>
       ) : null}
 

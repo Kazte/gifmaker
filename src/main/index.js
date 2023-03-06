@@ -131,52 +131,66 @@ ipcMain.on('open-folder', (event, args) => {
 let ffmpeg
 
 ipcMain.on('cancel-convert', () => {
-  ffmpeg.kill()
+  ffmpeg.canceled()
   console.log('killed')
 })
 
 ipcMain.on('convert-video', async (event, args) => {
   const { inputPath, outputPath } = args
-  const { totalFrames, fps } = await getTotalFrames(inputPath)
+  // const { totalFrames, fps } = await getTotalFrames(inputPath)
 
-  const fixedTotalFrame = (12 * totalFrames) / fps
+  // const fixedTotalFrame = (12 * totalFrames) / fps
 
-  console.log(totalFrames)
+  try {
+    ffmpeg = await execa('ffmpeg', [
+      '-i',
+      inputPath,
+      '-filter_complex',
+      '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
+      // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
+      outputPath,
+      '-y'
+    ]).stderr.pipe(process.stdout)
+  } catch (e) {
+    console.log(e)
+  }
 
-  ffmpeg = spawn('ffmpeg', [
-    '-i',
-    inputPath,
-    '-filter_complex',
-    '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
-    // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
-    outputPath,
-    '-y'
-  ])
+  // console.log(stdout)
 
-  // ffmpeg.stdout.on('data', (data) => {
-  //   // console.log('stdout', data.toString())
+  // ffmpeg = spawn('ffmpeg', [
+  //   '-i',
+  //   inputPath,
+  //   '-filter_complex',
+  //   '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen [p];[b][p] paletteuse',
+  //   // '[0:v] fps=12,scale=w=480:h=-1,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1',
+  //   outputPath,
+  //   '-y'
+  // ])
+
+  // // ffmpeg.stdout.on('data', (data) => {
+  // //   // console.log('stdout', data.toString())
+  // // })
+
+  // ffmpeg.stderr.on('data', (data) => {
+  //   // console.log('stderr', data.toString())
+  //   const split = data.toString().split('frame=')
+  //   const frame = parseInt(split[split.length - 1])
+  //   let progress = (frame / fixedTotalFrame) * 100
+  //   progress = Math.round(progress)
+
+  //   event.reply('progress', {
+  //     percent: progress,
+  //     done: false
+  //   })
   // })
 
-  ffmpeg.stderr.on('data', (data) => {
-    // console.log('stderr', data.toString())
-    const split = data.toString().split('frame=')
-    const frame = parseInt(split[split.length - 1])
-    let progress = (frame / fixedTotalFrame) * 100
-    progress = Math.round(progress)
-
-    event.reply('progress', {
-      percent: progress,
-      done: false
-    })
-  })
-
-  ffmpeg.on('close', (code) => {
-    console.log(`done with code ${code}`)
-    event.reply('progress', {
-      percent: 100,
-      done: true
-    })
-  })
+  // ffmpeg.on('close', (code) => {
+  //   console.log(`done with code ${code}`)
+  //   event.reply('progress', {
+  //     percent: 100,
+  //     done: true
+  //   })
+  // })
 })
 
 const getTotalFrames = (inputPath) => {

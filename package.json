@@ -18,17 +18,18 @@
     "postinstall": "electron-builder install-app-deps",
     "build:win": "npm run build && electron-builder --win --config --publish always",
     "build:mac": "npm run build && electron-builder --mac --config",
-    "build:linux": "npm run build && electron-builder --linux --config",
-    "download-ffmpeg-win32-x64": "mkdirp ffmpeg/win32-x64 && cd ffmpeg/win32-x64 && npx download-cli https://github.com/mifi/ffmpeg-builds/releases/download/5.1.2/win32-x64-v5.1.2.7z --out . --filename ffmpeg-ffprobe.7z && 7z x ffmpeg-ffprobe.7z && npx shx mv ffmpeg-5.1.2-essentials_build/bin/ffmpeg.exe ./ && npx shx mv ffmpeg-5.1.2-essentials_build/bin/ffprobe.exe ./"
+    "build:linux": "npm run build && electron-builder --linux --config"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^1.0.3",
     "@electron-toolkit/utils": "^1.0.2",
     "@reduxjs/toolkit": "^1.9.3",
     "electron-updater": "^5.3.0",
+    "execa": "^7.0.0",
     "keyboardjs": "^2.7.0",
     "lodash": "^4.17.21",
     "react-redux": "^8.0.5",
+    "react-scripts": "^5.0.1",
     "redux": "^4.2.1"
   },
   "devDependencies": {
