@@ -44,13 +44,11 @@ export const VideoPreview = ({ path }) => {
   }
 
   const handleMouseDown = (e) => {
-    console.log('down')
     setIsDragging(true)
     setDelta(e.clientX - e.target.offsetLeft)
   }
 
   const handleMouseUp = () => {
-    console.log('up')
     setIsDragging(false)
   }
 
@@ -64,9 +62,6 @@ export const VideoPreview = ({ path }) => {
 
       getVideo().currentTime = newCurrentTime
       dispatch(setCurrentTime(newCurrentTime))
-      console.log('move')
-    } else {
-      console.log('moveElse')
     }
   }
 

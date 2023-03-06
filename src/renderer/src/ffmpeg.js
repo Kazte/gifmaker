@@ -1,55 +1,60 @@
-import { execa } from 'execa'
+import { ffprobeGetData } from '../ffprobe'
+import EventEmmiter from 'events'
+export const ffmpegEvents = new EventEmmiter()
 
-const getTotalFrames = async (inputPath) => {
-  const { stdout } = await execa('ffprobe', [
-    '-v',
-    'error',
-    '-select_streams',
-    'v:0',
-    '-show_entries',
-    'stream=nb_frames',
-    '-of',
-    'default=nokey=1:noprint_wrappers=1',
-    inputPath
+const { spawn } = window.require('node:child_process')
+
+let ffmpeg
+
+export const ffmpegConvertToGif = async ({ inputPath, outputPath, fpsSample = 12 }) => {
+  const videoData = await ffprobeGetData(inputPath)
+  let progress = 0
+  let returnData = {
+    percent: 0,
+    done: false,
+    outputPath: outputPath,
+    error: false,
+    errorMessage: ''
+  }
+
+  ffmpeg = await spawn('ffmpeg', [
+    '-i',
+    inputPath,
+    '-vf',
+    `fps=${fpsSample},scale=320:-1:flags=lanczos`,
+    outputPath,
+    '-y'
   ])
-  const totalFrames = parseInt(stdout)
-  const fps = await getFps(inputPath)
-  return { totalFrames, fps }
-}
 
-const getFps = async (inputPath) => {
-  const { stdout } = await execa('ffprobe', [
-    '-v',
-    'error',
-    '-select_streams',
-    'v',
-    '-of',
-    'default=noprint_wrappers=1:nokey=1',
-    '-show_entries',
-    'stream=r_frame_rate',
-    inputPath
-  ])
-  const split = stdout.split('/')
-  return parseInt(split[0]) / parseInt(split[1])
-}
+  const fixedTotalFrame = (fpsSample * videoData.totalFrames) / videoData.fps
 
-const getDuration = async (inputPath) => {
-  const { stdout } = await execa('ffprobe', [
-    '-v',
-    'error',
-    '-show_entries',
-    'format=duration',
-    '-of',
-    'default=noprint_wrappers=1:nokey=1',
-    inputPath
-  ])
-  return parseFloat(stdout)
-}
+  ffmpeg.stderr.on('data', (data) => {
+    const split = data.toString().split('frame=')
+    const frame = parseInt(split[split.length - 1])
+    progress = (frame / fixedTotalFrame) * 100
+    progress = Math.round(progress)
 
-const getVideoInfo = async (inputPath) => {
-  const { totalFrames, fps } = await getTotalFrames(inputPath)
-  const duration = await getDuration(inputPath)
-  return { totalFrames, fps, duration }
-}
+    if (isNaN(progress)) {
+      progress = 0
+    }
 
-export default getVideoInfo
+    returnData.percent = progress
+
+    ffmpegEvents.emit('conversion', returnData)
+
+    // window.dispatchEvent(conversionEvent)
+  })
+
+  ffmpeg.on('close', (code) => {
+    console.log(`ffmpeg done with code ${code}`)
+
+    if (code === 0) {
+      returnData.done = true
+    } else {
+      returnData.error = true
+      returnData.errorMessage = 'Error converting to gif'
+    }
+
+    ffmpegEvents.emit('conversion', returnData)
+  })
+}
