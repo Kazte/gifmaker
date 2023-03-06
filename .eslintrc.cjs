@@ -18,5 +18,11 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
     'plugin:prettier/recommended'
+  ],
+  'prettier/prettier': [
+    'error',
+    {
+      endOfLine: 'auto'
+    }
   ]
 }
