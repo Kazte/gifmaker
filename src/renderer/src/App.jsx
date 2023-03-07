@@ -3,7 +3,7 @@ const { send, on, removeAllListeners } = window.electron.ipcRenderer
 import { useEffect, useState } from 'react'
 import { Dropzone, Modal, VideoPreview } from './components'
 import { useDispatch } from 'react-redux'
-import { pause } from './features/player/playerSlice'
+import { pause, setCurrentTime } from './features/player/playerSlice'
 import keyboardjs from 'keyboardjs'
 import { ffmpegConvertToGif, ffmpegEvents } from './ffmpeg'
 
@@ -19,6 +19,8 @@ function App() {
     setConverting(false)
     setProgress(0)
     setFilePath(_filePath)
+    dispatch(pause())
+    dispatch(setCurrentTime(0))
   }
 
   const dispatch = useDispatch()
@@ -147,7 +149,7 @@ function App() {
     <div className="app">
       {!filePath ? (
         <header>
-          <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" />
+          {/* <img src="https://i.imgur.com/2k7CAKB.png" alt="logo" /> */}
           <h1>GifMaker</h1>
         </header>
       ) : null}
@@ -155,9 +157,21 @@ function App() {
       <main>
         <p>{getFileName(filePath)}</p>
         {filePath ? (
-          <div className="video-preview-container">
-            <VideoPreview path={filePath} />
-          </div>
+          <>
+            <div className="video-preview-container">
+              <VideoPreview path={filePath} />
+            </div>
+
+            <div className="buttons">
+              <button className="convert-button" disabled={filePath === ''} onClick={handleConvert}>
+                Convert
+              </button>
+
+              <button className="convert-button" disabled={filePath === ''} onClick={handleClear}>
+                Clear
+              </button>
+            </div>
+          </>
         ) : (
           <Dropzone
             handleFilePathChanged={handleFilePathChanged}
@@ -167,15 +181,7 @@ function App() {
           />
         )}
 
-        <div className="buttons">
-          <button className="convert-button" disabled={filePath === ''} onClick={handleConvert}>
-            Convert
-          </button>
 
-          <button className="convert-button" disabled={filePath === ''} onClick={handleClear}>
-            Clear
-          </button>
-        </div>
       </main>
 
       {showModal && (

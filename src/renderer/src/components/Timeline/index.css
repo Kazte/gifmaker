@@ -1,0 +1,25 @@
+.timeline {
+  width: 100%;
+  position: relative;
+  background-color: #444;
+}
+
+.video-preview__time {
+  text-align: center;
+  color: rgb(255, 255, 255);
+  padding: .5em;
+  pointer-events: none;
+  user-select: none;
+  z-index: 3
+}
+
+.current-time {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  width: 5px;
+  background-color: red;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}

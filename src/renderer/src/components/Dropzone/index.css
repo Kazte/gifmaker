@@ -10,8 +10,6 @@
   align-items: center;
 }
 
-
-
 .border:hover {
 
   background-color: rgb(29, 29, 29);
@@ -31,4 +29,13 @@
 
 .drop-zone {
   padding: 15px;
+  height: 100%;
+  width: 96vw;
+}
+
+.drop-zone p {
+  color: #fff;
+  font-size: 2.5rem;
+  font-weight: 500;
+  text-align: center;
 }

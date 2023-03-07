@@ -1,16 +1,26 @@
 import './index.css'
 import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { play, pause, setCurrentTime, setDuration } from '../../features/player/playerSlice'
+import { play, pause, setCurrentTime, setDuration, setVolume } from '../../features/player/playerSlice'
 import { formatDuration } from '../../utils/format'
+import { Timeline } from '../Timeline'
+import { BsFillVolumeMuteFill, BsVolumeDownFill, BsFillVolumeUpFill } from "react-icons/bs";
+
+
+const volumeIcons = {
+  0: 'BsFillVolumeMuteFill',
+  0.5: 'BsVolumeDownFill',
+  1: 'BsFillVolumeUpFill'
+}
 
 export const VideoPreview = ({ path }) => {
-  const { playing, duration, currentTime } = useSelector((state) => state.player)
+  const { playing, duration, currentTime, volume } = useSelector((state) => state.player)
   const dispatch = useDispatch()
   const videoRef = useRef()
 
   const [delta, setDelta] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
 
   const getVideo = () => videoRef.current
 
@@ -20,7 +30,9 @@ export const VideoPreview = ({ path }) => {
     } else {
       getVideo().pause()
     }
-  }, [playing, videoRef])
+    getVideo().volume = volume
+  }, [playing, volume])
+
 
   const handleOnDurationChange = (e) => {
     setDuration(e.target.duration)
@@ -35,7 +47,7 @@ export const VideoPreview = ({ path }) => {
   const handleTimelineClick = (e) => {
     const { left, width } = e.target.getBoundingClientRect()
     const { duration } = getVideo()
-    const clickPosition = e.clientX - left
+    const clickPosition = (e.clientX - left) - 4
     const clickPositionInPercent = clickPosition / width
     const newCurrentTime = clickPositionInPercent * duration
 
@@ -56,13 +68,18 @@ export const VideoPreview = ({ path }) => {
     if (isDragging) {
       const { left, width } = e.target.getBoundingClientRect()
       const { duration } = getVideo()
-      const clickPosition = e.clientX - left
+      const clickPosition = (e.clientX - left) - 4
       const clickPositionInPercent = clickPosition / width
       const newCurrentTime = clickPositionInPercent * duration
 
       getVideo().currentTime = newCurrentTime
       dispatch(setCurrentTime(newCurrentTime))
     }
+  }
+
+  const handleVolumeOnChange = (e) => {
+    getVideo().volume = e.target.value / 100
+    dispatch(setVolume(e.target.value / 100))
   }
 
   return (
@@ -75,27 +92,39 @@ export const VideoPreview = ({ path }) => {
           autoPlay
           onDurationChange={handleOnDurationChange}
           onTimeUpdate={handleOnTimeUpdate}
+          onPlay={() => dispatch(play())}
+          onPause={() => dispatch(pause())}
+          volume={volume}
         >
           Your browser does not support the video tag.
         </video>
+
+
+
+        <div className='video-preview__volume-slider'>
+          <div className='video-preview__volume-button' title={`${showVolumeSlider ? 'Hide' : 'Show'} volume slider`}>
+            {
+              volume === 0 ? <BsFillVolumeMuteFill onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} /> :
+                volume <= 0.5 ? <BsVolumeDownFill onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} /> :
+                  <BsFillVolumeUpFill onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} />
+            }
+          </div>
+          {showVolumeSlider &&
+            (
+              <label>
+                <input className='video-preview__volume-slider__input' type="range" min="0" max="100" step="1" value={volume * 100} onChange={handleVolumeOnChange} />
+              </label>
+            )
+          }
+        </div>
       </div>
 
-      <div
-        id="timeline"
-        className="timeline"
-        onClick={handleTimelineClick}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseUp}
-      >
-        <p className="video-preview__time">{`${formatDuration(currentTime)}`}</p>
-        <div
-          className="current-time"
-          style={{ left: `${(currentTime / duration) * 100}%` }}
-          draggable="true"
-        />
-      </div>
+      <Timeline currentTime={currentTime} duration={duration}
+        onHandleTimelineClick={handleTimelineClick}
+        onHandleMouseDown={handleMouseDown}
+        onHandleMouseUp={handleMouseUp}
+        onHandleMouseMove={handleMouseMove}
+      />
 
       <div className="controls-wrapper">
         <button

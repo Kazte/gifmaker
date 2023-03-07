@@ -5,7 +5,8 @@ const initialState = {
   currentTime: 0,
   duration: 0,
   cutStart: 0,
-  cutEnd: undefined
+  cutEnd: undefined,
+  volume: 0.5
 }
 
 export const playerSlice = createSlice({
@@ -30,11 +31,14 @@ export const playerSlice = createSlice({
     },
     setCutEnd: (state, action) => {
       state.cutEnd = action.payload
+    },
+    setVolume: (state, action) => {
+      state.volume = action.payload
     }
   }
 })
 
-export const { play, pause, setCurrentTime, setDuration, setCutStart, setCutEnd } =
+export const { play, pause, setCurrentTime, setDuration, setCutStart, setCutEnd, setVolume } =
   playerSlice.actions
 
 export default playerSlice.reducer
