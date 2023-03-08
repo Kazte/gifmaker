@@ -10,11 +10,12 @@ files:
 asarUnpack:
   - resources/*
 afterSign: build/notarize.js
+extends: null
 win:
   executableName: GifMaker
-  icon: buildResources/icon.png
   publish:
     - github
+    - bitbucket
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -41,10 +42,3 @@ appImage:
 npmRebuild: false
 publish:
   provider: github
-  repo: https://github.com/Kazte/gifmaker
-  owner: Kazte
-  releaseType: release
-  publishAutoUpdate: true
-  host: github.com
-  token: ${env.GH_TOKEN}
-
