@@ -19,7 +19,7 @@
     "build:win": "npm run build && electron-builder --win --config",
     "build:mac": "npm run build && electron-builder --mac --config",
     "build:linux": "npm run build && electron-builder --linux --config",
-    "release": "npm run build && electron-builder --publish always --config",
+    "release": "npm run build && electron-builder --publish always --config"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^1.0.3",
