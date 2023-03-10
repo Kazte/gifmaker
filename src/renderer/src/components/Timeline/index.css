@@ -13,9 +13,9 @@
   margin: 5px auto;
   pointer-events: none;
   user-select: none;
-  z-index: 2;
+  z-index: 4;
   width: fit-content;
-  background-color: #00000071;
+  background-color: #0000009c;
   position: absolute;
   top: 50%;
   left: 50%;

@@ -108,9 +108,13 @@ main {
   background-color: #3dff67;
 }
 
-/* Close button in the corner of the modal */
 .close-button {
   background-color: #dd3838;
+  transition: background-color 0.25s;
+}
+
+.close-button:not(:disabled):hover {
+  background-color: #a01f1f;
 }
 
 .video-preview-container {

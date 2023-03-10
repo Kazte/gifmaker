@@ -124,6 +124,10 @@ function App() {
 
   const handleCancel = () => {
     ffmpegCancel()
+
+    setConverting(false)
+    setOutputPath('')
+    setProgress(0)
   }
 
   const handleClear = () => {
