@@ -1,20 +1,19 @@
 import './index.css'
 import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { play, pause, setCurrentTime, setDuration, setVolume } from '../../features/player/playerSlice'
+import { play, pause, setCurrentTime, setDuration, setVolume, setCutStart, setCutEnd } from '../../features/player/playerSlice'
 import { formatDuration } from '../../utils/format'
 import { Timeline } from '../Timeline'
-import { BsFillVolumeMuteFill, BsVolumeDownFill, BsFillVolumeUpFill } from "react-icons/bs";
-
+import { IconPlayerPlayFilled, IconPlayerPauseFilled, IconVolume3, IconVolume2, IconVolume, IconBoxAlignLeft, IconBoxAlignRight } from '@tabler/icons-react';
 
 const volumeIcons = {
-  0: 'BsFillVolumeMuteFill',
-  0.5: 'BsVolumeDownFill',
-  1: 'BsFillVolumeUpFill'
+  0: 'IconVolume3',
+  0.5: 'IconVolume2',
+  1: 'IconVolume'
 }
 
 export const VideoPreview = ({ path }) => {
-  const { playing, duration, currentTime, volume } = useSelector((state) => state.player)
+  const { playing, duration, currentTime, volume, cutStart, cutEnd } = useSelector((state) => state.player)
   const dispatch = useDispatch()
   const videoRef = useRef()
 
@@ -26,12 +25,27 @@ export const VideoPreview = ({ path }) => {
 
   useEffect(() => {
     if (playing) {
+
+      const curTime = getVideo().currentTime
+
+      if (curTime < cutStart) {
+        getVideo().currentTime = cutStart
+        dispatch(setCurrentTime(cutStart))
+      }
+
       getVideo().play()
     } else {
       getVideo().pause()
     }
     getVideo().volume = volume
   }, [playing, volume])
+
+  useEffect(() => {
+    dispatch(setCutStart(0))
+    dispatch(setCutEnd(duration))
+
+  }, [videoRef])
+
 
 
   const handleOnDurationChange = (e) => {
@@ -40,8 +54,17 @@ export const VideoPreview = ({ path }) => {
   }
 
   const handleOnTimeUpdate = (e) => {
-    setCurrentTime(e.target.currentTime)
-    dispatch(setCurrentTime(e.target.currentTime))
+    const curTime = e.target.currentTime
+
+    if (playing) {
+
+      if (curTime >= cutEnd) {
+        getVideo().currentTime = cutStart
+        dispatch(setCurrentTime(cutStart + 0.1))
+      }
+
+      dispatch(setCurrentTime(curTime))
+    }
   }
 
   const handleTimelineClick = (e) => {
@@ -82,6 +105,27 @@ export const VideoPreview = ({ path }) => {
     dispatch(setVolume(e.target.value / 100))
   }
 
+  const handleCutStart = () => {
+    const tentaiveCutStart = currentTime
+
+    if (tentaiveCutStart >= cutEnd) {
+      return
+    }
+    dispatch(setCutStart(tentaiveCutStart))
+  }
+
+  const handleCutEnd = () => {
+    const tentaiveCutEnd = currentTime
+
+    if (tentaiveCutEnd <= cutStart) {
+      return
+    }
+    dispatch(setCutEnd(tentaiveCutEnd))
+  }
+
+
+
+
   return (
     <>
       <div className="video-preview">
@@ -95,6 +139,7 @@ export const VideoPreview = ({ path }) => {
           onPlay={() => dispatch(play())}
           onPause={() => dispatch(pause())}
           volume={volume}
+          onEnded={() => dispatch(pause())}
         >
           Your browser does not support the video tag.
         </video>
@@ -104,9 +149,9 @@ export const VideoPreview = ({ path }) => {
         <div className='video-preview__volume-slider'>
           <div className='video-preview__volume-button' title={`${showVolumeSlider ? 'Hide' : 'Show'} volume slider`}>
             {
-              volume === 0 ? <BsFillVolumeMuteFill onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} /> :
-                volume <= 0.5 ? <BsVolumeDownFill onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} /> :
-                  <BsFillVolumeUpFill onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} />
+              volume === 0 ? <IconVolume3 onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} /> :
+                volume <= 0.5 ? <IconVolume2 onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} /> :
+                  <IconVolume onClick={() => setShowVolumeSlider(!showVolumeSlider)} size={30} />
             }
           </div>
           {showVolumeSlider &&
@@ -119,16 +164,22 @@ export const VideoPreview = ({ path }) => {
         </div>
       </div>
 
-      <Timeline currentTime={currentTime} duration={duration}
-        onHandleTimelineClick={handleTimelineClick}
-        onHandleMouseDown={handleMouseDown}
-        onHandleMouseUp={handleMouseUp}
-        onHandleMouseMove={handleMouseMove}
-      />
+      <div style={{ display: "flex" }}>
+        <Timeline currentTime={currentTime} duration={duration}
+          onHandleTimelineClick={handleTimelineClick}
+          onHandleMouseDown={handleMouseDown}
+          onHandleMouseUp={handleMouseUp}
+          onHandleMouseMove={handleMouseMove}
+          startCut={cutStart}
+          endCut={cutEnd}
+        />
+      </div>
 
       <div className="controls-wrapper">
+        <button onClick={handleCutStart}>
+          <IconBoxAlignLeft size={30} />
+        </button>
         <button
-          style={{ minWidth: '100px' }}
           onClick={() => {
             if (playing) {
               dispatch(pause())
@@ -137,7 +188,12 @@ export const VideoPreview = ({ path }) => {
             }
           }}
         >
-          {playing ? 'Pause' : 'Play'}
+          {playing ?
+            <IconPlayerPauseFilled size={30} />
+            : <IconPlayerPlayFilled size={30} />}
+        </button>
+        <button onClick={handleCutEnd}>
+          <IconBoxAlignRight size={30} />
         </button>
       </div>
     </>

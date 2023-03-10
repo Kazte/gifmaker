@@ -1,6 +1,6 @@
 {
   "name": "gifmaker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An Electron application with React",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -25,11 +25,11 @@
     "@electron-toolkit/preload": "^1.0.3",
     "@electron-toolkit/utils": "^1.0.2",
     "@reduxjs/toolkit": "^1.9.3",
+    "@tabler/icons-react": "^2.9.0",
     "electron-updater": "^5.3.0",
     "execa": "~5.1.1",
     "keyboardjs": "^2.7.0",
     "lodash": "^4.17.21",
-    "react-icons": "^4.8.0",
     "react-redux": "^8.0.5",
     "react-scripts": "^5.0.1",
     "redux": "^4.2.1"

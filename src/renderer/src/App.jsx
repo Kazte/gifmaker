@@ -2,10 +2,10 @@ import './App.css'
 const { send, on, removeAllListeners } = window.electron.ipcRenderer
 import { useEffect, useState } from 'react'
 import { Dropzone, Modal, VideoPreview } from './components'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { pause, setCurrentTime } from './features/player/playerSlice'
 import keyboardjs from 'keyboardjs'
-import { ffmpegConvertToGif, ffmpegEvents } from './ffmpeg'
+import { ffmpegCancel, ffmpegConvertToGif, ffmpegEvents } from './ffmpeg'
 
 function App() {
   const [progress, setProgress] = useState(0)
@@ -13,6 +13,8 @@ function App() {
   const [filePath, setFilePath] = useState('')
   const [converting, setConverting] = useState(false)
   const [showModal, setShowModal] = useState(false)
+
+  const { cutStart, cutEnd } = useSelector((state) => state.player)
 
   const handleFilePathChanged = (_filePath) => {
     setOutputPath('')
@@ -117,15 +119,11 @@ function App() {
     const fileExtension = filePath.split('.').pop()
     const outputPath = filePath.replace(`.${fileExtension}`, '.gif')
 
-    await ffmpegConvertToGif({ inputPath: filePath, outputPath, fpsSample: 10 })
+    await ffmpegConvertToGif({ inputPath: filePath, outputPath, fpsSample: 10, cutFrom: cutStart, cutTo: cutEnd })
   }
 
   const handleCancel = () => {
-    setOutputPath('')
-    setProgress(0)
-    setConverting(false)
-
-    send('cancel-convert')
+    ffmpegCancel()
   }
 
   const handleClear = () => {

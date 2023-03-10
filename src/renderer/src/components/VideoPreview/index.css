@@ -58,3 +58,14 @@
   justify-content: center;
   gap: 1rem;
 }
+
+.controls-wrapper button {
+  background-color: #1d1d1d;
+  color: #fff;
+  cursor: pointer;
+  width: 65px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
