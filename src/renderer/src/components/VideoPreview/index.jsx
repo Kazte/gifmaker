@@ -1,10 +1,10 @@
 import './index.css'
 import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { play, pause, setCurrentTime, setDuration, setVolume, setCutStart, setCutEnd } from '../../features/player/playerSlice'
+import { play, pause, setCurrentTime, setDuration, setVolume, setCutStart, setCutEnd, setRepeat } from '../../features/player/playerSlice'
 import { formatDuration } from '../../utils/format'
 import { Timeline } from '../Timeline'
-import { IconPlayerPlayFilled, IconPlayerPauseFilled, IconVolume3, IconVolume2, IconVolume, IconBoxAlignLeft, IconBoxAlignRight } from '@tabler/icons-react';
+import { IconPlayerPlayFilled, IconPlayerPauseFilled, IconVolume3, IconVolume2, IconVolume, IconBoxAlignLeft, IconBoxAlignRight, IconRepeat, IconRepeatOff, IconEraser } from '@tabler/icons-react';
 
 const volumeIcons = {
   0: 'IconVolume3',
@@ -13,7 +13,7 @@ const volumeIcons = {
 }
 
 export const VideoPreview = ({ path }) => {
-  const { playing, duration, currentTime, volume, cutStart, cutEnd } = useSelector((state) => state.player)
+  const { playing, duration, currentTime, volume, cutStart, cutEnd, repeat } = useSelector((state) => state.player)
   const dispatch = useDispatch()
   const videoRef = useRef()
 
@@ -31,6 +31,9 @@ export const VideoPreview = ({ path }) => {
       if (curTime < cutStart) {
         getVideo().currentTime = cutStart
         dispatch(setCurrentTime(cutStart))
+      } else if (curTime >= cutEnd) {
+        getVideo().currentTime = cutStart
+        dispatch(setCurrentTime(cutStart + 0.1))
       }
 
       getVideo().play()
@@ -54,15 +57,18 @@ export const VideoPreview = ({ path }) => {
   }
 
   const handleOnTimeUpdate = (e) => {
-    const curTime = e.target.currentTime
+    let curTime = e.target.currentTime
 
     if (playing) {
-
       if (curTime >= cutEnd) {
-        getVideo().currentTime = cutStart
-        dispatch(setCurrentTime(cutStart + 0.1))
-      }
 
+        if (!repeat) {
+          dispatch(pause())
+        }
+
+        getVideo().currentTime = cutStart
+        curTime = cutStart
+      }
       dispatch(setCurrentTime(curTime))
     }
   }
@@ -109,7 +115,7 @@ export const VideoPreview = ({ path }) => {
     const tentaiveCutStart = currentTime
 
     if (tentaiveCutStart >= cutEnd) {
-      return
+      dispatch(setCutEnd(duration))
     }
     dispatch(setCutStart(tentaiveCutStart))
   }
@@ -118,12 +124,19 @@ export const VideoPreview = ({ path }) => {
     const tentaiveCutEnd = currentTime
 
     if (tentaiveCutEnd <= cutStart) {
-      return
+      dispatch(setCutStart(0))
     }
     dispatch(setCutEnd(tentaiveCutEnd))
   }
 
+  const handleRepeat = () => {
+    dispatch(setRepeat(!repeat))
+  }
 
+  const handleResetCuts = () => {
+    dispatch(setCutStart(0))
+    dispatch(setCutEnd(duration))
+  }
 
 
   return (
@@ -132,8 +145,7 @@ export const VideoPreview = ({ path }) => {
         <video
           ref={videoRef}
           src={path}
-          loop
-          autoPlay
+          loop={repeat}
           onDurationChange={handleOnDurationChange}
           onTimeUpdate={handleOnTimeUpdate}
           onPlay={() => dispatch(play())}
@@ -176,7 +188,10 @@ export const VideoPreview = ({ path }) => {
       </div>
 
       <div className="controls-wrapper">
-        <button onClick={handleCutStart}>
+        <button onClick={handleResetCuts} title="Reset Cuts">
+          <IconEraser size={30} />
+        </button>
+        <button onClick={handleCutStart} title="Cut Start">
           <IconBoxAlignLeft size={30} />
         </button>
         <button
@@ -187,14 +202,20 @@ export const VideoPreview = ({ path }) => {
               dispatch(play())
             }
           }}
+          title={playing ? "Pause" : "Play"}
         >
           {playing ?
             <IconPlayerPauseFilled size={30} />
             : <IconPlayerPlayFilled size={30} />}
         </button>
-        <button onClick={handleCutEnd}>
+        <button onClick={handleCutEnd} title="Cut End">
           <IconBoxAlignRight size={30} />
         </button>
+
+        <button onClick={handleRepeat} title={repeat ? "Turn Off Repeat" : "Turn On Repeat"}>
+          {repeat ? <IconRepeat size={30} /> : <IconRepeatOff size={30} />}
+        </button>
+
       </div>
     </>
   )

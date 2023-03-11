@@ -1,7 +1,7 @@
 {
   "name": "gifmaker",
-  "version": "1.0.2",
-  "description": "An Electron application with React",
+  "version": "1.0.3",
+  "description": "Gifmaker is a simple application to create gifs from videos. It is built with Electron, React, Redux, and Vite.",
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://www.electronjs.org",

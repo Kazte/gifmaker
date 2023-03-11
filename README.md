@@ -4,7 +4,7 @@
 
 # GifMaker
 
-GUI Tool to make GIF from Videos.
+Gifmaker is a application for windows. You can convert videos to gifs and edit them.
 
 ## Installing
 

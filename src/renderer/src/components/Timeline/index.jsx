@@ -22,19 +22,25 @@ export const Timeline = ({ currentTime, startCut, endCut, duration, onHandleTime
         onMouseLeave={onHandleMouseUp}
       >
         <p className="time">{`${formatDuration(currentTime)}`}</p>
-        {startCut > 0 && <div className="timeline__start-cut-line" style={
-          {
-            // left: `${(startCut / duration) * 100}%`,
-            width: `${((startCut) / duration) * 100}%`,
-          }
-        } />}
+        {startCut > 0 &&
+          (
+            <div className="timeline__start-cut-line" style={
+              {
+                // left: `${(startCut / duration) * 100}%`,
+                width: `${((startCut) / duration) * 100}%`,
+              }
+            } />
+          )}
+        {endCut < duration &&
+          (
+            <div className="timeline__end-cut-line"
+              style={{
+                left: `${(endCut / duration) * 100}%`,
+                width: `${100 - ((endCut / duration) * 100)}%`
+              }}>
+            </div>
+          )}
 
-        <div className="timeline__end-cut-line"
-          style={{
-            left: `${(endCut / duration) * 100}%`,
-            width: `${100 - ((endCut / duration) * 100)}%`
-          }}>
-        </div>
 
         <div
           className="current-time"
