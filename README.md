@@ -4,7 +4,7 @@
 
 # GifMaker
 
-Gifmaker is a application for windows. You can convert videos to gifs and edit them.
+GifMaker is a desktop application for converting videos to gifs, allowing you to trim them.
 
 ## Installing
 
